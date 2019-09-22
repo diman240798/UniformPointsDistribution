@@ -15,11 +15,14 @@ public final class Line {
     }
 
     public boolean intersect(Line line) {
+        if (this.end == line.end || this.end == line.start) return false;
+        if (this.start == line.end || this.start == line.start) return false;
         double x = (line.b - this.b) / (this.k - line.k);
         double y = this.k * x + this.b;
 
         Point point = new Point(x, y);
-        return  this.isInside(point) && line.isInside(point);
+        boolean shdBeDeleted = this.isInside(point) && line.isInside(point);
+        return shdBeDeleted;
     }
 
     public boolean isInside(Point p) {
@@ -28,8 +31,9 @@ public final class Line {
         double maxY = Math.max(start.y, end.y);
         double minY = Math.min(start.y, end.y);
 
-        return p.x > minX && p.x < maxX &&
-               p.y > minY && p.y < maxY;
+
+        return  Math.round(p.x * 100000000) > Math.round(minX * 100000000)  && Math.round(p.x * 100000000) < Math.round(maxX * 100000000)
+                && Math.round(p.y * 100000000) > Math.round(minY * 100000000)  && Math.round(p.y * 100000000) < Math.round(maxY * 100000000);
     }
 
 

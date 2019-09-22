@@ -1,9 +1,7 @@
 package sample;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class LinesLogic {
@@ -26,9 +24,9 @@ public class LinesLogic {
     private static void checkLineAndAdd(Point point, Point p, List<Line> result) {
         Line line = new Line(point, p);
         List<Line> possibleCoincidences = result.stream().filter(l ->
-                (Math.round(l.k * 100000000) == Math.round(line.k * 100000000) && Math.round(l.b * 100000000) == Math.round(line.b * 100000000))  && (
+                (Math.round(l.k * 100000000) == Math.round(line.k * 100000000) && Math.round(l.b * 100000000) == Math.round(line.b * 100000000)) && (
                         (line.start == l.end || line.start == l.start) ||
-                        (line.end == l.end || line.end == l.start)
+                                (line.end == l.end || line.end == l.start)
                 )
         ).collect(Collectors.toList());
 
@@ -54,28 +52,34 @@ public class LinesLogic {
     }
 
     public static List<Line> onlyShortestAreleft(List<Line> allLines) {
-        Set<Line> shorts = getIntersected(allLines);
-        return new ArrayList<>(shorts);
-    }
-
-    private static Set<Line> getIntersected(List<Line> allLines) {
-        List<Line> shorts = new ArrayList<>();
-        for (int i = 0; i < allLines.size(); i++) {
-            Line line = allLines.get(i);
-            for (int j = 0; j < allLines.size(); j++) {
-                if (i == j) continue;
-                Line l = allLines.get(j);
-                boolean intersect = line.intersect(l);
-                if (intersect) {
-                    Line shortest = getShortestLine(line, l);
-                    shorts.add(shortest);
+        List<Line> shorts = new ArrayList<>(allLines);
+        boolean inter = true;
+        while (inter) {
+            inter = false;
+            for (int i = 0; i < shorts.size(); i++) {
+                Line line = shorts.get(i);
+                for (int j = 0; j < shorts.size(); j++) {
+                    if (i == j) continue;
+                    Line l = shorts.get(j);
+                    boolean intersect = line.intersect(l);
+                    if (intersect) {
+                        inter = true;
+                        line = getLongestLine(line, l);
+                        if (shorts.contains(line)) {
+                            shorts.remove(line);
+                        }
+                    }
                 }
             }
         }
-        return new HashSet<>(shorts);
+        return shorts;
     }
 
     private static Line getShortestLine(Line line, Line l) {
         return line.getLength() > l.getLength() ? l : line;
+    }
+
+    private static Line getLongestLine(Line line, Line l) {
+        return line.getLength() > l.getLength() ? line : l;
     }
 }

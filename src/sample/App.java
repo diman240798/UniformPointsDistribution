@@ -14,7 +14,7 @@ public class App extends Application {
 
     private static final double SIZE = 1000;
     private static final double RADIUS = 3;
-    private static final int COUNT = 5;
+    private static final int COUNT = 100;
 
 
 
