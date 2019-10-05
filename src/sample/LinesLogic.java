@@ -1,6 +1,7 @@
 package sample;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,34 +53,21 @@ public class LinesLogic {
     }
 
     public static List<Line> onlyShortestAreleft(List<Line> allLines) {
+        List<Line> result = new ArrayList<>();
+
         List<Line> shorts = new ArrayList<>(allLines);
-        boolean inter = true;
-        while (inter) {
-            inter = false;
-            for (int i = 0; i < shorts.size(); i++) {
-                Line line = shorts.get(i);
-                for (int j = 0; j < shorts.size(); j++) {
-                    if (i == j) continue;
-                    Line l = shorts.get(j);
-                    boolean intersect = line.intersect(l);
-                    if (intersect) {
-                        inter = true;
-                        line = getLongestLine(line, l);
-                        if (shorts.contains(line)) {
-                            shorts.remove(line);
-                        }
-                    }
-                }
+        shorts.sort(Comparator.comparingDouble(Line::getLength));
+
+        for (int i = 0; i < shorts.size(); i++) {
+            Line line = shorts.get(i);
+            boolean intersect = result.stream().anyMatch(l -> {
+                return l.intersect(line);
+            });
+            if (!intersect) {
+                result.add(line);
             }
         }
-        return shorts;
-    }
 
-    private static Line getShortestLine(Line line, Line l) {
-        return line.getLength() > l.getLength() ? l : line;
-    }
-
-    private static Line getLongestLine(Line line, Line l) {
-        return line.getLength() > l.getLength() ? line : l;
+        return result;
     }
 }
