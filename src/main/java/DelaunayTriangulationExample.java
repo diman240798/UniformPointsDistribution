@@ -6,8 +6,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
@@ -26,7 +27,7 @@ import com.jogamp.opengl.util.FPSAnimator;
  * @author Johannes Diemke
  */
 public class DelaunayTriangulationExample implements GLEventListener, MouseListener {
-    private static final int COUNT = 100;
+    private static final int COUNT = 30;
     private static final int SIZE = 1000;
 
     private static final Dimension DIMENSION = new Dimension(SIZE, SIZE);
@@ -167,6 +168,58 @@ public class DelaunayTriangulationExample implements GLEventListener, MouseListe
         }
 
         gl.glEnd();
+
+
+
+        if (!delaunayTriangulator.getTriangles().isEmpty()) {
+            Map<Integer, Integer> result = new HashMap<>();
+
+            Map<Vector2D, List<Triangle2D>> generalMap = new HashMap<>();
+
+            Map<Vector2D, List<Triangle2D>> mapa = delaunayTriangulator.getTriangles().stream().collect(Collectors.groupingBy(tr -> tr.a));
+            Map<Vector2D, List<Triangle2D>> mapb = delaunayTriangulator.getTriangles().stream().collect(Collectors.groupingBy(tr -> tr.b));
+            Map<Vector2D, List<Triangle2D>> mapc = delaunayTriangulator.getTriangles().stream().collect(Collectors.groupingBy(tr -> tr.c));
+
+            fillGeneralMap(generalMap, mapa);
+            fillGeneralMap(generalMap, mapb);
+            fillGeneralMap(generalMap, mapc);
+
+            generalMap.forEach((point, triangles) -> {
+                if (triangles.size() < 4) return;
+
+                Set<Vector2D> set = new HashSet<>();
+                triangles.forEach(tr -> {
+                    set.add(tr.a);
+                    set.add(tr.b);
+                    set.add(tr.c);
+                });
+                set.remove(point);
+
+                boolean greaterX = set.stream().allMatch(p -> p.x > point.x);
+                boolean smallerX = set.stream().allMatch(p -> p.x < point.x);
+                boolean greaterY = set.stream().allMatch(p -> p.y > point.y);
+                boolean smallerY = set.stream().allMatch(p -> p.y < point.y);
+
+                if (!greaterX || !greaterY || !smallerX || !smallerY) {
+                    int polyHedronType = triangles.size();
+                    int res = result.getOrDefault(polyHedronType, 0);
+                    res += 1;
+                    result.put(polyHedronType, res);
+                }
+
+            });
+
+            int a =6;
+            int b = a;
+        }
+    }
+
+    private void fillGeneralMap(Map<Vector2D, List<Triangle2D>> generalMap, Map<Vector2D, List<Triangle2D>> shortMap) {
+        shortMap.forEach((point, triangles) -> {
+            List<Triangle2D> list = generalMap.getOrDefault(point, new ArrayList<>());
+            list.addAll(triangles);
+            generalMap.put(point, list);
+        });
     }
 
     public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {
