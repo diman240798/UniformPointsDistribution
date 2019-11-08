@@ -18,20 +18,8 @@ public class PointsLogic {
         return list;
     }
 
-    public static double getAverageDistanceBetweenPoints(List<MyPoint> myPoints) {
-        List<Double> avDistances = new ArrayList<>();
-        for (int i = 0; i < myPoints.size(); i++) {
-            MyPoint p0 = myPoints.get(i);
-            for (int j = 0; j < myPoints.size(); j++) {
-                if (i == j) continue;
-                MyPoint p1 = myPoints.get(j);
-                double distBtwTwoPoints = getDistBtwTwoPoints(p0, p1);
-                if (distBtwTwoPoints < 3.65 / myPoints.size())
-                    avDistances.add(distBtwTwoPoints);
-            }
-        }
-        Double sum = avDistances.stream().reduce(Double::sum).get();
-        return sum / avDistances.size();
+    public static double getAverageDistanceBetweenPoints(int size, int pointsCount) {
+        return size * Math.sqrt(2 / (pointsCount * Math.sqrt(3))) / size;
     }
 
     public static double getDistBtwTwoPoints(MyPoint p0, MyPoint p1) {

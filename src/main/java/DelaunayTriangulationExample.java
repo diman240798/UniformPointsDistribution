@@ -1,33 +1,33 @@
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Frame;
-import java.awt.Point;
+import com.jogamp.opengl.*;
+import com.jogamp.opengl.awt.GLCanvas;
+import com.jogamp.opengl.util.FPSAnimator;
+import javafx.scene.Scene;
+import javafx.scene.layout.Pane;
+import javafx.stage.Stage;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.*;
-import java.util.function.BiConsumer;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-
-import com.jogamp.opengl.GL;
-import com.jogamp.opengl.GL2;
-import com.jogamp.opengl.GLAutoDrawable;
-import com.jogamp.opengl.GLCapabilities;
-import com.jogamp.opengl.GLEventListener;
-import com.jogamp.opengl.GLProfile;
-import com.jogamp.opengl.awt.GLCanvas;
-import com.jogamp.opengl.util.FPSAnimator;
 
 
 /**
  * Simple implementation of an incremental 2D Delaunay triangulation algorithm
  * written in Java.
- * 
+ *
  * @author Johannes Diemke
  */
 public class DelaunayTriangulationExample implements GLEventListener, MouseListener {
-    private static final int COUNT = 30;
+    private static final int COUNT = 700;
     private static final int SIZE = 1000;
 
     private static final Dimension DIMENSION = new Dimension(SIZE, SIZE);
@@ -168,50 +168,68 @@ public class DelaunayTriangulationExample implements GLEventListener, MouseListe
         }
 
         gl.glEnd();
+    }
+
+    private void showWindowsWithNumbers() {
+        Map<Integer, Integer> result = new HashMap<>();
+
+        Map<Vector2D, List<Triangle2D>> generalMap = new HashMap<>();
+
+        Map<Vector2D, List<Triangle2D>> mapa = delaunayTriangulator.getTriangles().stream().collect(Collectors.groupingBy(tr -> tr.a));
+        Map<Vector2D, List<Triangle2D>> mapb = delaunayTriangulator.getTriangles().stream().collect(Collectors.groupingBy(tr -> tr.b));
+        Map<Vector2D, List<Triangle2D>> mapc = delaunayTriangulator.getTriangles().stream().collect(Collectors.groupingBy(tr -> tr.c));
+
+        fillGeneralMap(generalMap, mapa);
+        fillGeneralMap(generalMap, mapb);
+        fillGeneralMap(generalMap, mapc);
+
+        generalMap.forEach((point, triangles) -> {
+            if (triangles.size() < 3) return;
+
+            double leftIndent = (double) SIZE / COUNT; // ОТСТУП
+            double rightIndent = (double) SIZE - leftIndent;
+            boolean isInsideIndentedBox = point.x > leftIndent && point.y > leftIndent && point.x < rightIndent && point.y < rightIndent;
+            if (!isInsideIndentedBox) return;
+
+            int polyHedronType = triangles.size();
+            int res = result.getOrDefault(polyHedronType, 0);
+            res += 1;
+            result.put(polyHedronType, res);
+
+        });
+
+        StringBuilder finalText = new StringBuilder();
+
+        result.forEach((polyHedronType, countOfSuchpolyHedron) -> {
+            String text = PolyhedronNamesUtil.map.get(polyHedronType);
+            finalText.append(text + " : " + countOfSuchpolyHedron + "\n");
+        });
+
+        int height = result.size() * 35;
+
+        Frame f= new Frame("Counts");
+        TextArea textArea = new TextArea(finalText.toString());
+        textArea.setEditable(false);
+        textArea.setBounds(20,50, 200, height);
+        textArea.setFont(new Font("Courier", Font.PLAIN, 20));
+        f.add(textArea);
+        f.setSize(200 + 40, height + 100);
+        f.setLayout(null);
+        f.setVisible(true);
+
+       /* javafx.scene.control.Label label = new javafx.scene.control.Label();
+        label.setFont(new Font(20));
+        label.setMinWidth(200);
+        label.setMinHeight(height);
+        label.setText(finalText.toString());
 
 
-
-        if (!delaunayTriangulator.getTriangles().isEmpty()) {
-            Map<Integer, Integer> result = new HashMap<>();
-
-            Map<Vector2D, List<Triangle2D>> generalMap = new HashMap<>();
-
-            Map<Vector2D, List<Triangle2D>> mapa = delaunayTriangulator.getTriangles().stream().collect(Collectors.groupingBy(tr -> tr.a));
-            Map<Vector2D, List<Triangle2D>> mapb = delaunayTriangulator.getTriangles().stream().collect(Collectors.groupingBy(tr -> tr.b));
-            Map<Vector2D, List<Triangle2D>> mapc = delaunayTriangulator.getTriangles().stream().collect(Collectors.groupingBy(tr -> tr.c));
-
-            fillGeneralMap(generalMap, mapa);
-            fillGeneralMap(generalMap, mapb);
-            fillGeneralMap(generalMap, mapc);
-
-            generalMap.forEach((point, triangles) -> {
-                if (triangles.size() < 4) return;
-
-                Set<Vector2D> set = new HashSet<>();
-                triangles.forEach(tr -> {
-                    set.add(tr.a);
-                    set.add(tr.b);
-                    set.add(tr.c);
-                });
-                set.remove(point);
-
-                boolean greaterX = set.stream().allMatch(p -> p.x > point.x);
-                boolean smallerX = set.stream().allMatch(p -> p.x < point.x);
-                boolean greaterY = set.stream().allMatch(p -> p.y > point.y);
-                boolean smallerY = set.stream().allMatch(p -> p.y < point.y);
-
-                if (!greaterX || !greaterY || !smallerX || !smallerY) {
-                    int polyHedronType = triangles.size();
-                    int res = result.getOrDefault(polyHedronType, 0);
-                    res += 1;
-                    result.put(polyHedronType, res);
-                }
-
-            });
-
-            int a =6;
-            int b = a;
-        }
+        Pane root = new Pane();
+        root.getChildren().add(label);
+        Scene scene = new Scene(root, 200 , height);
+        Stage stage = new Stage();
+        stage.setScene(scene);
+        stage.show();*/
     }
 
     private void fillGeneralMap(Map<Vector2D, List<Triangle2D>> generalMap, Map<Vector2D, List<Triangle2D>> shortMap) {
@@ -229,15 +247,22 @@ public class DelaunayTriangulationExample implements GLEventListener, MouseListe
     public void dispose(GLAutoDrawable drawable) {
     }
 
+    int clicks = 0;
+
     @Override
     public void mouseClicked(MouseEvent e) {
-        List<MyPoint> myPoints = drawPointsAndGet();
-        myPoints.forEach(p-> pointSet.add(new Vector2D(p.x * SIZE, p.y * SIZE)));
-        try {
-            delaunayTriangulator.triangulate();
-        } catch (NotEnoughPointsException ex) {
-            ex.printStackTrace();
+        if (clicks == 0) {
+            List<MyPoint> myPoints = drawPointsAndGet();
+            myPoints.forEach(p -> pointSet.add(new Vector2D(p.x * SIZE, p.y * SIZE)));
+            try {
+                delaunayTriangulator.triangulate();
+            } catch (NotEnoughPointsException ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            showWindowsWithNumbers();
         }
+        clicks += 1;
     }
 
     @Override
@@ -264,10 +289,9 @@ public class DelaunayTriangulationExample implements GLEventListener, MouseListe
     }
 
 
-
     private static List<MyPoint> drawPointsAndGet() {
         List<MyPoint> points = PointsLogic.getHaltonPoints(COUNT);
-        double averageDistanceBetweenPoints = PointsLogic.getAverageDistanceBetweenPoints(points);
+        double averageDistanceBetweenPoints = PointsLogic.getAverageDistanceBetweenPoints(SIZE, COUNT);
         List<MyPoint> randomPoints = PointsLogic.generatePointWithDistance(averageDistanceBetweenPoints, COUNT);
 
         return randomPoints;
