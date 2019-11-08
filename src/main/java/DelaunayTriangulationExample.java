@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * @author Johannes Diemke
  */
 public class DelaunayTriangulationExample implements GLEventListener, MouseListener {
-    private static final int COUNT = 700;
+    private static int COUNT = 700;
     private static final int SIZE = 1000;
 
     private static final Dimension DIMENSION = new Dimension(SIZE, SIZE);
@@ -41,6 +41,9 @@ public class DelaunayTriangulationExample implements GLEventListener, MouseListe
     List<Vector2D> pointSet = new ArrayList<>();
 
     public static void main(String[] args) throws NotEnoughPointsException {
+        if (args[0] != null) {
+            COUNT = Integer.parseInt(args[0]);
+        }
         Frame frame = new Frame("Delaunay Triangulation Example");
         frame.setResizable(false);
 

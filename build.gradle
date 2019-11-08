@@ -11,6 +11,19 @@ repositories {
     mavenCentral()
 }
 
+jar {
+    from {
+        (configurations.runtime).collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+    manifest {
+        attributes 'Main-Class': 'DelaunayTriangulationExample'
+    }
+}
+
+
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compile 'org.jogamp.gluegen:gluegen-rt-main:2.3.2'
